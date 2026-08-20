@@ -2,318 +2,606 @@ package Utilisateur;
 
 import java.io.*;
 import java.nio.file.*;
-import java.text.*;
+import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.stream.*;
 
 public class Admin {
+
     private static String password = "pass123";
-    private static final String blackPath = "blacklist.txt";
-    private static final String usersPath = "users.txt";
+
+    private static final String BLACKLIST_FILE = "blacklist.txt";
+    private static final String USERS_FILE = "users.txt";
     private static final String COURSES_FILE = "courses.txt";
-    private static final String FICHIER_PROFILES = "profiles.txt";
-    private static final SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+    private static final String PROFILES_FILE = "profiles.txt";
+
+    private static final SimpleDateFormat DATE_FORMAT =
+            new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
 
     public Admin() {
         // Default constructor
     }
 
     public void changePass() {
-        Scanner sc = new Scanner(System.in);
-        System.out.println("Enter current password:");
-        String currentPass = sc.nextLine();
 
-        if (currentPass.equals(password)) {
+        Scanner sc = new Scanner(System.in);
+
+        System.out.println("Enter current password:");
+        String currentPassword = sc.nextLine();
+
+        if (currentPassword.equals(password)) {
+
             while (true) {
+
                 System.out.println("Enter new password:");
-                String newpass = sc.nextLine();
-                if (!isValidPass(newpass)) {System.out.println("Password must be at least 8 characters and contain at least one number and one symbol");}
-                else {
-                    password = newpass;
-                    System.out.println("Password changed");
+                String newPassword = sc.nextLine();
+
+                if (!isValidPass(newPassword)) {
+
+                    System.out.println(
+                            "Password must be at least 8 characters " +
+                                    "and contain at least one number and one symbol."
+                    );
+
+                } else {
+
+                    password = newPassword;
+                    System.out.println("Password changed successfully.");
                     break;
                 }
             }
-        } else {System.out.println("Incorrect password");}
+
+        } else {
+
+            System.out.println("Incorrect password.");
+        }
     }
 
     private boolean isValidPass(String password) {
-        boolean digit = false;
-        boolean symbol = false;
 
-        if (password.length() < 8) {return false;}
-        for (char c : password.toCharArray()) {
-            if (Character.isDigit(c)) {digit = true;} else if (!Character.isLetterOrDigit(c)) {symbol = true;}
-            if (digit && symbol) {return true;}
+        boolean hasDigit = false;
+        boolean hasSymbol = false;
+
+        if (password.length() < 8) {
+            return false;
         }
+
+        for (char c : password.toCharArray()) {
+
+            if (Character.isDigit(c)) {
+                hasDigit = true;
+
+            } else if (!Character.isLetterOrDigit(c)) {
+                hasSymbol = true;
+            }
+
+            if (hasDigit && hasSymbol) {
+                return true;
+            }
+        }
+
         return false;
     }
 
-    public void banUser(double matUser) throws IOException {
-        if (Utilisateur.findUser(matUser)) {
-            BufferedWriter writer = new BufferedWriter(new FileWriter(blackPath, true));
-            writer.write(String.format("%.0f", matUser) + "\n");
+    public void banUser(double userId) throws IOException {
+
+        if (Utilisateur.findUser(userId)) {
+
+            BufferedWriter writer =
+                    new BufferedWriter(
+                            new FileWriter(BLACKLIST_FILE, true)
+                    );
+
+            writer.write(String.format("%.0f", userId) + "\n");
             writer.close();
-            System.out.println("Banned user with ID " + matUser);
+
+            System.out.println(
+                    "User with ID " + userId + " has been banned."
+            );
+
         } else {
+
             System.out.println("User not found.");
         }
     }
 
-    public boolean isUserBanned(double matricule) throws IOException {
-        File file = new File(blackPath);
-        if (!file.exists()) {return false;}
-        BufferedReader reader = new BufferedReader(new FileReader(blackPath));
+    public boolean isUserBanned(double userId) throws IOException {
+
+        File file = new File(BLACKLIST_FILE);
+
+        if (!file.exists()) {
+            return false;
+        }
+
+        BufferedReader reader =
+                new BufferedReader(new FileReader(BLACKLIST_FILE));
+
         String line;
 
         while ((line = reader.readLine()) != null) {
-            if (Double.parseDouble(line) == matricule) {
+
+            if (Double.parseDouble(line) == userId) {
+
                 reader.close();
                 return true;
             }
         }
+
         reader.close();
         return false;
     }
 
-    public void unbanUser(double matricule) throws IOException {
-        File blackFile = new File(blackPath);
-        if (!blackFile.exists()) {
+    public void unbanUser(double userId) throws IOException {
+
+        File blacklistFile = new File(BLACKLIST_FILE);
+
+        if (!blacklistFile.exists()) {
+
             System.out.println("Blacklist file does not exist.");
             return;
         }
-        File tblackFile = new File("temp_blacklist.txt");
-        BufferedReader reader = new BufferedReader(new FileReader(blackFile));
-        BufferedWriter writer = new BufferedWriter(new FileWriter(tblackFile));
+
+        File temporaryBlacklist =
+                new File("temp_blacklist.txt");
+
+        BufferedReader reader =
+                new BufferedReader(new FileReader(blacklistFile));
+
+        BufferedWriter writer =
+                new BufferedWriter(new FileWriter(temporaryBlacklist));
+
         String line;
         boolean found = false;
 
         while ((line = reader.readLine()) != null) {
-            if (Double.parseDouble(line) != matricule) {
+
+            if (Double.parseDouble(line) != userId) {
+
                 writer.write(line + "\n");
+
             } else {
+
                 found = true;
             }
         }
+
         reader.close();
         writer.close();
 
         if (found) {
-            blackFile.delete();
-            tblackFile.renameTo(blackFile);
-            System.out.println("Unbanned user with ID " + matricule);
+
+            blacklistFile.delete();
+            temporaryBlacklist.renameTo(blacklistFile);
+
+            System.out.println(
+                    "User with ID " + userId + " has been unbanned."
+            );
+
         } else {
-            tblackFile.delete();
-            System.out.println("User not found in the blacklist");
+
+            temporaryBlacklist.delete();
+
+            System.out.println(
+                    "User not found in the blacklist."
+            );
         }
     }
 
-    public void deleteUser(double mat) throws IOException {
-        File usersFile = new File(usersPath);
-        File temp = new File("users_temp.txt");
+    public void deleteUser(double userId) throws IOException {
 
-        if (!usersFile.exists()) {System.out.println("Users file doesn't exist"); return;}
-        boolean userExists = Utilisateur.findUser(mat);
-        if (!userExists) {System.out.println("User doesn't exist"); return;}
+        File usersFile = new File(USERS_FILE);
+        File temporaryFile = new File("users_temp.txt");
 
-        BufferedReader reader = new BufferedReader(new FileReader(usersFile));
-        BufferedWriter writer = new BufferedWriter(new FileWriter(temp));
+        if (!usersFile.exists()) {
+
+            System.out.println("Users file does not exist.");
+            return;
+        }
+
+        boolean userExists = Utilisateur.findUser(userId);
+
+        if (!userExists) {
+
+            System.out.println("User does not exist.");
+            return;
+        }
+
+        BufferedReader reader =
+                new BufferedReader(new FileReader(usersFile));
+
+        BufferedWriter writer =
+                new BufferedWriter(new FileWriter(temporaryFile));
+
         String line;
         boolean userDeleted = false;
 
         while ((line = reader.readLine()) != null) {
+
             String[] data = line.split(",");
 
             if (data.length > 0) {
-                try {
-                    double matricule = Double.parseDouble(data[0]);
 
-                    if (matricule != mat) {
+                try {
+
+                    double id = Double.parseDouble(data[0]);
+
+                    if (id != userId) {
+
                         writer.write(line + "\n");
+
                     } else {
+
                         userDeleted = true;
                     }
+
                 } catch (NumberFormatException e) {
+
                     writer.write(line + "\n");
                 }
             }
         }
+
         reader.close();
         writer.close();
 
         if (userDeleted) {
+
             usersFile.delete();
-            temp.renameTo(usersFile);
-            System.out.println("User deleted.");
-            if (isUserBanned(mat)) {unbanUser(mat);}
+            temporaryFile.renameTo(usersFile);
+
+            System.out.println("User deleted successfully.");
+
+            if (isUserBanned(userId)) {
+                unbanUser(userId);
+            }
+
         } else {
-            temp.delete();
+
+            temporaryFile.delete();
         }
     }
 
     public void showBannedUsers() throws IOException {
-        File file = new File(blackPath);
+
+        File file = new File(BLACKLIST_FILE);
+
         if (!file.exists() || file.length() == 0) {
-            System.out.println("No banned users");
+
+            System.out.println("No banned users.");
             return;
         }
+
         System.out.println("List of banned users:");
-        BufferedReader reader = new BufferedReader(new FileReader(blackPath));
+
+        BufferedReader reader =
+                new BufferedReader(new FileReader(BLACKLIST_FILE));
+
         String line;
 
         while ((line = reader.readLine()) != null) {
-            double matricule = Double.parseDouble(line);
-            System.out.println(String.format("%.0f", matricule));
+
+            double userId = Double.parseDouble(line);
+
+            System.out.println(
+                    String.format("%.0f", userId)
+            );
         }
+
         System.out.println("--------------------------------");
+
         reader.close();
     }
 
-    // Visualiser les courses en cours à un instant donné
+    // View rides currently in progress
 
     public void viewOngoingCourses() throws IOException {
+
         if (!Files.exists(Paths.get(COURSES_FILE))) {
+
             System.out.println("No rides recorded.");
             return;
         }
 
-        List<String> lines = Files.readAllLines(Paths.get(COURSES_FILE));
-        System.out.println("\n=== Courses en cours ===");
-        System.out.println("Chauffeur\tPassager\tHoraire\t\t\tStatut");
+        List<String> lines =
+                Files.readAllLines(Paths.get(COURSES_FILE));
 
-        boolean coursesFound = false;
+        System.out.println("\n=== Ongoing Rides ===");
+
+        System.out.println(
+                "Driver ID\tPassenger ID\tSchedule\t\t\tStatus"
+        );
+
+        boolean ridesFound = false;
+
         for (String line : lines) {
+
             String[] parts = line.split(",");
-            if (parts.length >= 4 && parts[3].equals("IN_PROGRESS")) {
-                System.out.println(parts[0] + "\t" + parts[1] + "\t" + parts[2] + "\t" + parts[3]);
-                coursesFound = true;
+
+            if (parts.length >= 4 &&
+                    parts[3].equals("IN_PROGRESS")) {
+
+                System.out.println(
+                        parts[0] + "\t" +
+                                parts[1] + "\t" +
+                                parts[2] + "\t" +
+                                parts[3]
+                );
+
+                ridesFound = true;
             }
         }
 
-        if (!coursesFound) {
-            System.out.println("No rides are currently in progress.");
+        if (!ridesFound) {
+
+            System.out.println(
+                    "No rides are currently in progress."
+            );
         }
     }
 
-    // Visualiser l'historique des courses passées
+    // View completed ride history
 
     public void viewCourseHistory() throws IOException {
+
         if (!Files.exists(Paths.get(COURSES_FILE))) {
+
             System.out.println("No rides recorded.");
             return;
         }
 
-        List<String> lines = Files.readAllLines(Paths.get(COURSES_FILE));
+        List<String> lines =
+                Files.readAllLines(Paths.get(COURSES_FILE));
+
         System.out.println("\n=== Ride History ===");
-        System.out.println("Chauffeur\tPassager\tHoraire\t\t\tStatut\tNote Chauffeur\tNote Passager\tCommentaire Chauffeur\tCommentaire Passager");
 
-        boolean coursesFound = false;
+        System.out.println(
+                "Driver ID\tPassenger ID\tSchedule\t\t\tStatus\t" +
+                        "Driver Rating\tPassenger Rating\tDriver Comment\tPassenger Comment"
+        );
+
+        boolean ridesFound = false;
+
         for (String line : lines) {
-            String[] parts = line.split(",");
-            if (parts.length >= 8 && parts[3].equals("COMPLETED")) {
-                String commentChauffeur = parts.length > 8 ? parts[8] : "";
-                String commentPassager = parts.length > 9 ? parts[9] : "";
 
-                System.out.println(parts[0] + "\t" + parts[1] + "\t" + parts[2] + "\t" +
-                        parts[3] + "\t" + parts[6] + "\t" + parts[7] + "\t" +
-                        commentChauffeur + "\t" + commentPassager);
-                coursesFound = true;
+            String[] parts = line.split(",");
+
+            if (parts.length >= 8 &&
+                    parts[3].equals("COMPLETED")) {
+
+                String driverComment =
+                        parts.length > 8 ? parts[8] : "";
+
+                String passengerComment =
+                        parts.length > 9 ? parts[9] : "";
+
+                System.out.println(
+                        parts[0] + "\t" +
+                                parts[1] + "\t" +
+                                parts[2] + "\t" +
+                                parts[3] + "\t" +
+                                parts[6] + "\t" +
+                                parts[7] + "\t" +
+                                driverComment + "\t" +
+                                passengerComment
+                );
+
+                ridesFound = true;
             }
         }
 
-        if (!coursesFound) {
-            System.out.println("No completed rides found.");
+        if (!ridesFound) {
+
+            System.out.println(
+                    "No completed rides found."
+            );
         }
     }
 
-    // Filtrer les courses par date
+    // Filter rides by date
 
-    public void viewCoursesByDate(String date) throws IOException {
+    public void viewCoursesByDate(String date)
+            throws IOException {
+
         if (!Files.exists(Paths.get(COURSES_FILE))) {
+
             System.out.println("No rides recorded.");
             return;
         }
 
-        List<String> lines = Files.readAllLines(Paths.get(COURSES_FILE));
-        System.out.println("\n=== Courses du " + date + " ===");
-        System.out.println("Chauffeur\tPassager\tHoraire\t\t\tStatut");
+        List<String> lines =
+                Files.readAllLines(Paths.get(COURSES_FILE));
 
-        boolean coursesFound = false;
+        System.out.println(
+                "\n=== Rides on " + date + " ==="
+        );
+
+        System.out.println(
+                "Driver ID\tPassenger ID\tSchedule\t\t\tStatus"
+        );
+
+        boolean ridesFound = false;
+
         for (String line : lines) {
+
             String[] parts = line.split(",");
-            if (parts.length >= 3 && parts[2].startsWith(date)) {
-                System.out.println(parts[0] + "\t" + parts[1] + "\t" + parts[2] + "\t" + parts[3]);
-                coursesFound = true;
+
+            if (parts.length >= 3 &&
+                    parts[2].startsWith(date)) {
+
+                System.out.println(
+                        parts[0] + "\t" +
+                                parts[1] + "\t" +
+                                parts[2] + "\t" +
+                                parts[3]
+                );
+
+                ridesFound = true;
             }
         }
 
-        if (!coursesFound) {
-            System.out.println("No rides found for this date.");
+        if (!ridesFound) {
+
+            System.out.println(
+                    "No rides found for this date."
+            );
         }
     }
 
-    // Générer des statistiques d'utilisation de l'application
+    // Generate application usage statistics
 
     public void generateStats() throws IOException {
-        Map<String, Integer> userTypeCount = countUsersByType();
+
+        Map<String, Integer> userTypeCount =
+                countUsersByType();
+
         int activeUsers = countActiveUsers();
-        Map<String, Integer> coursesByCategory = countCoursesByCategory();
-        List<Map.Entry<Double, Float>> topDrivers = getTopDrivers(10);
-        List<Map.Entry<Double, Float>> worstUsers = getWorstUsers(10);
 
-        System.out.println("\n=== STATISTIQUES D'UTILISATION ===");
+        Map<String, Integer> ridesByCategory =
+                countCoursesByCategory();
 
-        // Nombre d'utilisateurs par catégorie
-        System.out.println("\nNumber of users by category:");
-        System.out.println("- Students: " + userTypeCount.getOrDefault("ETUDIANT", 0));
-        System.out.println("- Teachers: " + userTypeCount.getOrDefault("ENSEIGNANT", 0));
-        System.out.println("- ATS: " + userTypeCount.getOrDefault("ATS", 0));
-        System.out.println("- Total: " + userTypeCount.values().stream().mapToInt(Integer::intValue).sum());
+        List<Map.Entry<Double, Float>> topDrivers =
+                getTopDrivers(10);
 
-        // Nombre d'utilisateurs actifs
-        System.out.println("\nNumber of active users: " + activeUsers);
+        List<Map.Entry<Double, Float>> lowestRatedUsers =
+                getWorstUsers(10);
 
-        // Catégories proposant le plus de courses
-        System.out.println("\nNumber of rides by user category:");
-        coursesByCategory.entrySet().stream()
-                .sorted(Map.Entry.<String, Integer>comparingByValue().reversed())
-                .forEach(entry -> System.out.println("- " + entry.getKey() + ": " + entry.getValue()));
+        System.out.println(
+                "\n=== APPLICATION USAGE STATISTICS ==="
+        );
 
-        // Top 10 des chauffeurs
+        // Number of users by category
+
+        System.out.println(
+                "\nNumber of users by category:"
+        );
+
+        System.out.println(
+                "- Students: " +
+                        userTypeCount.getOrDefault("ETUDIANT", 0)
+        );
+
+        System.out.println(
+                "- Teachers: " +
+                        userTypeCount.getOrDefault("ENSEIGNANT", 0)
+        );
+
+        System.out.println(
+                "- Administrative/Technical/Service Staff: " +
+                        userTypeCount.getOrDefault("ATS", 0)
+        );
+
+        System.out.println(
+                "- Total: " +
+                        userTypeCount.values()
+                                .stream()
+                                .mapToInt(Integer::intValue)
+                                .sum()
+        );
+
+        // Number of active users
+
+        System.out.println(
+                "\nNumber of active users: " + activeUsers
+        );
+
+        // Number of rides by user category
+
+        System.out.println(
+                "\nNumber of rides by user category:"
+        );
+
+        ridesByCategory.entrySet()
+                .stream()
+                .sorted(
+                        Map.Entry
+                                .<String, Integer>comparingByValue()
+                                .reversed()
+                )
+                .forEach(
+                        entry ->
+                                System.out.println(
+                                        "- " +
+                                                entry.getKey() +
+                                                ": " +
+                                                entry.getValue()
+                                )
+                );
+
+        // Top 10 drivers
+
         System.out.println("\nTop 10 drivers:");
+
         for (int i = 0; i < topDrivers.size(); i++) {
-            Map.Entry<Double, Float> driver = topDrivers.get(i);
-            System.out.println((i+1) + ". ID: " + String.format("%.0f", driver.getKey()) +
-                    ", Note moyenne: " + String.format("%.2f", driver.getValue()));
+
+            Map.Entry<Double, Float> driver =
+                    topDrivers.get(i);
+
+            System.out.println(
+                    (i + 1) +
+                            ". ID: " +
+                            String.format("%.0f", driver.getKey()) +
+                            ", Average rating: " +
+                            String.format("%.2f", driver.getValue())
+            );
         }
 
-        // Pires utilisateurs (à considérer pour bannissement)
-        System.out.println("\nUsers with the lowest ratings (consider for banning):");
-        for (int i = 0; i < worstUsers.size(); i++) {
-            Map.Entry<Double, Float> user = worstUsers.get(i);
-            System.out.println((i+1) + ". ID: " + String.format("%.0f", user.getKey()) +
-                    ", Note moyenne: " + String.format("%.2f", user.getValue()));
+        // Lowest-rated users
+
+        System.out.println(
+                "\nUsers with the lowest ratings " +
+                        "(consider for banning):"
+        );
+
+        for (int i = 0; i < lowestRatedUsers.size(); i++) {
+
+            Map.Entry<Double, Float> user =
+                    lowestRatedUsers.get(i);
+
+            System.out.println(
+                    (i + 1) +
+                            ". ID: " +
+                            String.format("%.0f", user.getKey()) +
+                            ", Average rating: " +
+                            String.format("%.2f", user.getValue())
+            );
         }
     }
 
-    // Compter le nombre d'utilisateurs par type
+    // Count users by type
 
-    private Map<String, Integer> countUsersByType() throws IOException {
-        Map<String, Integer> userTypeCount = new HashMap<>();
+    private Map<String, Integer> countUsersByType()
+            throws IOException {
 
-        if (!Files.exists(Paths.get(usersPath))) {
+        Map<String, Integer> userTypeCount =
+                new HashMap<>();
+
+        if (!Files.exists(Paths.get(USERS_FILE))) {
             return userTypeCount;
         }
 
-        List<String> lines = Files.readAllLines(Paths.get(usersPath));
+        List<String> lines =
+                Files.readAllLines(Paths.get(USERS_FILE));
+
         for (String line : lines) {
+
             String[] parts = line.split(",");
+
             if (parts.length >= 3) {
-                double matricule = Double.parseDouble(parts[0]);
-                Profile profile = Profile.getProfileByMatricule(matricule);
+
+                double userId =
+                        Double.parseDouble(parts[0]);
+
+                Profile profile =
+                        Profile.getProfileByMatricule(userId);
+
                 if (profile != null) {
+
                     String type = profile.getRole();
-                    userTypeCount.put(type, userTypeCount.getOrDefault(type, 0) + 1);
+
+                    userTypeCount.put(
+                            type,
+                            userTypeCount.getOrDefault(type, 0) + 1
+                    );
                 }
             }
         }
@@ -321,132 +609,239 @@ public class Admin {
         return userTypeCount;
     }
 
-    // Compter le nombre d'utilisateurs actifs (qui ont participé à au moins une course)
+    // Count active users who participated in at least one ride
 
     private int countActiveUsers() throws IOException {
-        Set<Double> activeUsers = new HashSet<>();
+
+        Set<Double> activeUsers =
+                new HashSet<>();
 
         if (!Files.exists(Paths.get(COURSES_FILE))) {
             return 0;
         }
 
-        List<String> lines = Files.readAllLines(Paths.get(COURSES_FILE));
+        List<String> lines =
+                Files.readAllLines(Paths.get(COURSES_FILE));
+
         for (String line : lines) {
+
             String[] parts = line.split(",");
+
             if (parts.length >= 2) {
-                activeUsers.add(Double.parseDouble(parts[0]));
-                activeUsers.add(Double.parseDouble(parts[1])); 
+
+                activeUsers.add(
+                        Double.parseDouble(parts[0])
+                );
+
+                activeUsers.add(
+                        Double.parseDouble(parts[1])
+                );
             }
         }
 
         return activeUsers.size();
     }
 
-    // Compter le nombre de courses par catégorie d'utilisateur
+    // Count rides by user category
 
-    private Map<String, Integer> countCoursesByCategory() throws IOException {
-        Map<String, Integer> coursesByCategory = new HashMap<>();
+    private Map<String, Integer> countCoursesByCategory()
+            throws IOException {
+
+        Map<String, Integer> ridesByCategory =
+                new HashMap<>();
 
         if (!Files.exists(Paths.get(COURSES_FILE))) {
-            return coursesByCategory;
+            return ridesByCategory;
         }
 
-        List<String> lines = Files.readAllLines(Paths.get(COURSES_FILE));
-        for (String line : lines) {
-            String[] parts = line.split(",");
-            if (parts.length >= 2) {
-                double chauffeurMat = Double.parseDouble(parts[0]);
-                Profile chauffeur = Profile.getProfileByMatricule(chauffeurMat);
+        List<String> lines =
+                Files.readAllLines(Paths.get(COURSES_FILE));
 
-                if (chauffeur != null) {
-                    String type = chauffeur.getRole();
-                    coursesByCategory.put(type, coursesByCategory.getOrDefault(type, 0) + 1);
+        for (String line : lines) {
+
+            String[] parts = line.split(",");
+
+            if (parts.length >= 2) {
+
+                double driverId =
+                        Double.parseDouble(parts[0]);
+
+                Profile driver =
+                        Profile.getProfileByMatricule(driverId);
+
+                if (driver != null) {
+
+                    String type = driver.getRole();
+
+                    ridesByCategory.put(
+                            type,
+                            ridesByCategory.getOrDefault(type, 0) + 1
+                    );
                 }
             }
         }
 
-        return coursesByCategory;
+        return ridesByCategory;
     }
 
-    // Obtenir les meilleurs chauffeurs selon leur note moyenne
+    // Get the highest-rated drivers
 
-    private List<Map.Entry<Double, Float>> getTopDrivers(int limit) throws IOException {
-        Map<Double, Float> driverRatings = new HashMap<>();
-        Map<Double, Integer> driverCounts = new HashMap<>();
+    private List<Map.Entry<Double, Float>> getTopDrivers(
+            int limit) throws IOException {
 
-        if (!Files.exists(Paths.get(FICHIER_PROFILES))) {
+        Map<Double, Float> driverRatings =
+                new HashMap<>();
+
+        Map<Double, Integer> driverCounts =
+                new HashMap<>();
+
+        if (!Files.exists(Paths.get(PROFILES_FILE))) {
             return new ArrayList<>();
         }
 
-        List<String> profileLines = Files.readAllLines(Paths.get(FICHIER_PROFILES));
-        for (String line : profileLines) {
-            String[] parts = line.split(",");
-            if (parts.length >= 13) {
-                double matricule = Double.parseDouble(parts[2]);
-                float moyChauff = Float.parseFloat(parts[10]);
-                int nbChauff = Integer.parseInt(parts[12]);
+        List<String> profileLines =
+                Files.readAllLines(Paths.get(PROFILES_FILE));
 
-                if (nbChauff > 0) {
-                    driverRatings.put(matricule, moyChauff / nbChauff);
-                    driverCounts.put(matricule, nbChauff);
+        for (String line : profileLines) {
+
+            String[] parts = line.split(",");
+
+            if (parts.length >= 13) {
+
+                double userId =
+                        Double.parseDouble(parts[2]);
+
+                float driverAverage =
+                        Float.parseFloat(parts[10]);
+
+                int driverCount =
+                        Integer.parseInt(parts[12]);
+
+                if (driverCount > 0) {
+
+                    driverRatings.put(
+                            userId,
+                            driverAverage / driverCount
+                    );
+
+                    driverCounts.put(
+                            userId,
+                            driverCount
+                    );
                 }
             }
         }
 
-        // Filtrer les chauffeurs avec au moins 3 courses
-        return driverRatings.entrySet().stream()
-                .filter(entry -> driverCounts.getOrDefault(entry.getKey(), 0) >= 3)
-                .sorted(Map.Entry.<Double, Float>comparingByValue().reversed())
+        // Only consider drivers with at least three rides
+
+        return driverRatings.entrySet()
+                .stream()
+                .filter(
+                        entry ->
+                                driverCounts.getOrDefault(
+                                        entry.getKey(),
+                                        0
+                                ) >= 3
+                )
+                .sorted(
+                        Map.Entry
+                                .<Double, Float>comparingByValue()
+                                .reversed()
+                )
                 .limit(limit)
                 .collect(Collectors.toList());
     }
 
-    // Obtenir les utilisateurs avec les notes les plus basses
+    // Get users with the lowest ratings
 
-    private List<Map.Entry<Double, Float>> getWorstUsers(int limit) throws IOException {
-        Map<Double, Float> userRatings = new HashMap<>();
-        Map<Double, Integer> userCounts = new HashMap<>();
+    private List<Map.Entry<Double, Float>> getWorstUsers(
+            int limit) throws IOException {
 
-        if (!Files.exists(Paths.get(FICHIER_PROFILES))) {
+        Map<Double, Float> userRatings =
+                new HashMap<>();
+
+        Map<Double, Integer> userCounts =
+                new HashMap<>();
+
+        if (!Files.exists(Paths.get(PROFILES_FILE))) {
             return new ArrayList<>();
         }
 
-        List<String> profileLines = Files.readAllLines(Paths.get(FICHIER_PROFILES));
-        for (String line : profileLines) {
-            String[] parts = line.split(",");
-            if (parts.length >= 13) {
-                double matricule = Double.parseDouble(parts[2]);
-                float moyPass = Float.parseFloat(parts[9]);
-                float moyChauff = Float.parseFloat(parts[10]);
-                int nbPass = Integer.parseInt(parts[11]);
-                int nbChauff = Integer.parseInt(parts[12]);
+        List<String> profileLines =
+                Files.readAllLines(Paths.get(PROFILES_FILE));
 
-                float totalRating = moyPass + moyChauff;
-                int totalCount = nbPass + nbChauff;
+        for (String line : profileLines) {
+
+            String[] parts = line.split(",");
+
+            if (parts.length >= 13) {
+
+                double userId =
+                        Double.parseDouble(parts[2]);
+
+                float passengerAverage =
+                        Float.parseFloat(parts[9]);
+
+                float driverAverage =
+                        Float.parseFloat(parts[10]);
+
+                int passengerCount =
+                        Integer.parseInt(parts[11]);
+
+                int driverCount =
+                        Integer.parseInt(parts[12]);
+
+                float totalRating =
+                        passengerAverage + driverAverage;
+
+                int totalCount =
+                        passengerCount + driverCount;
 
                 if (totalCount > 0) {
-                    userRatings.put(matricule, totalRating / totalCount);
-                    userCounts.put(matricule, totalCount);
+
+                    userRatings.put(
+                            userId,
+                            totalRating / totalCount
+                    );
+
+                    userCounts.put(
+                            userId,
+                            totalCount
+                    );
                 }
             }
         }
 
-        // Filtrer les utilisateurs avec au moins 3 évaluations
-        return userRatings.entrySet().stream()
-                .filter(entry -> userCounts.getOrDefault(entry.getKey(), 0) >= 3)
+        // Only consider users with at least three ratings
+
+        return userRatings.entrySet()
+                .stream()
+                .filter(
+                        entry ->
+                                userCounts.getOrDefault(
+                                        entry.getKey(),
+                                        0
+                                ) >= 3
+                )
                 .sorted(Map.Entry.comparingByValue())
                 .limit(limit)
                 .collect(Collectors.toList());
     }
 
-    // Afficher le menu d'administration
+    // Display the administration menu
 
     public void showAdminMenu() {
+
         Scanner sc = new Scanner(System.in);
+
         int choice = 0;
 
         while (true) {
-            System.out.println("\n=== Administration Menu ===");
+
+            System.out.println(
+                    "\n=== Administration Menu ==="
+            );
+
             System.out.println("1. View ongoing rides");
             System.out.println("2. View ride history");
             System.out.println("3. View rides by date");
@@ -457,78 +852,134 @@ public class Admin {
             System.out.println("8. Delete a user");
             System.out.println("9. Change admin password");
             System.out.println("10. Exit");
+
             System.out.print("Your choice: ");
 
             try {
+
                 choice = sc.nextInt();
                 sc.nextLine();
 
                 switch (choice) {
+
                     case 1:
                         viewOngoingCourses();
                         break;
+
                     case 2:
                         viewCourseHistory();
                         break;
+
                     case 3:
-                        System.out.print("Enter the date (format YYYY-MM-DD): ");
+                        System.out.print(
+                                "Enter the date (format YYYY-MM-DD): "
+                        );
+
                         String date = sc.nextLine();
+
                         viewCoursesByDate(date);
                         break;
+
                     case 4:
                         generateStats();
                         break;
+
                     case 5:
-                        System.out.print("Enter the ID of the user to ban: ");
-                        double matToBan = sc.nextDouble();
-                        sc.nextLine(); // Clear buffer
-                        banUser(matToBan);
+
+                        System.out.print(
+                                "Enter the ID of the user to ban: "
+                        );
+
+                        double userToBan = sc.nextDouble();
+                        sc.nextLine();
+
+                        banUser(userToBan);
                         break;
+
                     case 6:
-                        System.out.print("Enter the ID of the user to unban: ");
-                        double matToUnban = sc.nextDouble();
-                        sc.nextLine(); // Clear buffer
-                        unbanUser(matToUnban);
+
+                        System.out.print(
+                                "Enter the ID of the user to unban: "
+                        );
+
+                        double userToUnban = sc.nextDouble();
+                        sc.nextLine();
+
+                        unbanUser(userToUnban);
                         break;
+
                     case 7:
                         showBannedUsers();
                         break;
+
                     case 8:
-                        System.out.print("Enter the ID of the user to delete: ");
-                        double matToDelete = sc.nextDouble();
-                        sc.nextLine(); // Clear buffer
-                        deleteUser(matToDelete);
+
+                        System.out.print(
+                                "Enter the ID of the user to delete: "
+                        );
+
+                        double userToDelete = sc.nextDouble();
+                        sc.nextLine();
+
+                        deleteUser(userToDelete);
                         break;
+
                     case 9:
                         changePass();
                         break;
+
                     case 10:
+
                         System.out.println("Goodbye!");
                         return;
+
                     default:
-                        System.out.println("Invalid choice, please try again.");
+
+                        System.out.println(
+                                "Invalid choice. Please try again."
+                        );
                 }
+
             } catch (Exception e) {
-                System.out.println("Error: " + e.getMessage());
+
+                System.out.println(
+                        "Error: " + e.getMessage()
+                );
+
                 e.printStackTrace();
+
                 sc.nextLine();
             }
         }
     }
 
     public static void main(String[] args) {
+
         Admin admin = new Admin();
-        System.out.println("=== Administration System ===");
+
+        System.out.println(
+                "=== Administration System ==="
+        );
 
         Scanner sc = new Scanner(System.in);
-        System.out.print("Admin password: ");
-        String inputPass = sc.nextLine();
 
-        if (inputPass.equals(password)) {
-            System.out.println("Login successful!");
+        System.out.print("Admin password: ");
+
+        String inputPassword = sc.nextLine();
+
+        if (inputPassword.equals(password)) {
+
+            System.out.println(
+                    "Login successful!"
+            );
+
             admin.showAdminMenu();
+
         } else {
-            System.out.println("Incorrect password. Access denied.");
+
+            System.out.println(
+                    "Incorrect password. Access denied."
+            );
         }
     }
 }

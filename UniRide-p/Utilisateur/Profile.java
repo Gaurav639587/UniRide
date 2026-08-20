@@ -12,35 +12,96 @@ import java.util.List;
 import java.util.Map;
 import java.util.Scanner;
 
-public class Profile extends Utilisateur{
-    public static void refreshMoyenne(Profile chauffeur, Profile passager, int noteChauff, int notePass) {
-    }
+public class Profile extends Utilisateur {
 
-    protected enum status { Passager, Chauffeur }
-    private static status status;
-    private List<String> itineraire;
-    private List<String> preferences;
-    protected enum Horaire { Journalier, Hebdomadaire, Quotidien }
-    private static Horaire horaire;
-    protected enum Type { allerRetour, aller, retour }
-    private static Type type;
-    private float moyPass = 0;
-    private float moyChauff = 0;
-    private int nbPass = 0;
-    private int nbChauff = 0;
-    private final String role;
+    // =========================================================
+    // FILES
+    // =========================================================
+
     private static final String FICHIER_DEMANDES = "demands.txt";
     private static final String FICHIER_PROFILES = "profiles.txt";
 
-    // Map pour stocker tous les profils en mémoire (pour un accès rapide)
-    private static Map<Double, Profile> profilesMap = new HashMap<>();
+    // Stores profiles in memory for quick access
+    private static final Map<Double, Profile> profilesMap =
+            new HashMap<>();
+
+
+    // =========================================================
+    // USER STATUS
+    // =========================================================
+
+    // Names are kept unchanged because other project classes
+    // already use them.
+    protected enum status {
+        Passager,
+        Chauffeur
+    }
+
+    /*
+     * IMPORTANT:
+     * This remains static because the existing project uses
+     * status from static methods.
+     */
+    private static status status;
+
+
+    // =========================================================
+    // USER ROUTES AND PREFERENCES
+    // =========================================================
+
+    private List<String> itineraire;
+    private List<String> preferences;
+
+
+    // =========================================================
+    // AVAILABILITY
+    // =========================================================
+
+    protected enum Horaire {
+        Journalier,
+        Hebdomadaire,
+        Quotidien
+    }
+
+    private Horaire horaire;
+
+
+    // =========================================================
+    // TRIP TYPE
+    // =========================================================
+
+    protected enum Type {
+        allerRetour,
+        aller,
+        retour
+    }
+
+    private Type type;
+
+
+    // =========================================================
+    // RATING INFORMATION
+    // =========================================================
+
+    private float moyPass = 0;
+    private float moyChauff = 0;
+
+    private int nbPass = 0;
+    private int nbChauff = 0;
+
+    private final String role;
+
+
+    // =========================================================
+    // GETTERS AND SETTERS
+    // =========================================================
 
     public status getStatus() {
         return status;
     }
 
     public void setStatus(status status) {
-        this.status = status;
+        Profile.status = status;
     }
 
     public List<String> getItineraire() {
@@ -75,375 +136,1021 @@ public class Profile extends Utilisateur{
         this.type = type;
     }
 
-    public String getRole() { return this.role; }
+    public String getRole() {
+        return this.role;
+    }
+
+
+    // =========================================================
+    // SWITCH PASSENGER / DRIVER
+    // =========================================================
 
     public void switchStatus() {
-        this.status = (this.status == status.Passager) ? status.Chauffeur : status.Passager;
+
+        if (Profile.status == status.Passager) {
+
+            Profile.status = status.Chauffeur;
+
+        } else {
+
+            Profile.status = status.Passager;
+        }
     }
+
+
+    // =========================================================
+    // CALCULATE AVERAGE RATING
+    // =========================================================
 
     public float calculMoyenne() {
-        if (nbPass == 0 && nbChauff == 0) return 0;
-        if (status == status.Passager) return moyPass / nbPass;  // Fixed: was moyPass / nbChauff
-        if (status == status.Chauffeur) return moyChauff / nbChauff;  // Fixed: was moyChauff / nbPass
-        return (moyPass + moyChauff) / (nbPass + nbChauff);
+
+        if (nbPass == 0 && nbChauff == 0) {
+            return 0;
+        }
+
+        if (Profile.status == status.Passager) {
+
+            if (nbPass == 0) {
+                return 0;
+            }
+
+            return moyPass / nbPass;
+        }
+
+        if (Profile.status == status.Chauffeur) {
+
+            if (nbChauff == 0) {
+                return 0;
+            }
+
+            return moyChauff / nbChauff;
+        }
+
+        return (moyPass + moyChauff)
+                / (nbPass + nbChauff);
     }
 
-    /**
-     * Met à jour la moyenne des notes pour l'utilisateur en fonction des évaluations reçues
-     * @param rating La note reçue
-     */
+
+    // =========================================================
+    // UPDATE CURRENT USER RATING
+    // =========================================================
+
     public void refreshMoyenne(float rating) {
-        if (status == status.Passager) {
+
+        if (Profile.status == status.Passager) {
+
             moyPass += rating;
             nbPass++;
+
         } else {
+
             moyChauff += rating;
             nbChauff++;
         }
+
         setReputation(calculMoyenne());
 
-        // Mettre à jour le profil dans le fichier
         try {
+
             mettreAJourProfil();
+
         } catch (IOException e) {
-            System.out.println("Error updating profile: " + e.getMessage());
+
+            System.out.println(
+                    "Error updating profile: "
+                            + e.getMessage()
+            );
         }
     }
 
-    /**
-     * Met à jour les moyennes des notes pour le chauffeur et le passager impliqués dans une course
-     * @param matChauffeur Le matricule du chauffeur
-     * @param matPassager Le matricule du passager
-     * @param noteChauffeur La note attribuée au chauffeur
-     * @param notePassager La note attribuée au passager
-     * @return true si la mise à jour a réussi, false sinon
-     */
-    public static boolean refreshMoyenne(double matChauffeur, double matPassager, float noteChauffeur, float notePassager) {
-        // Récupérer les profils par matricule
-        Profile chauffeur = getProfileByMatricule(matChauffeur);
-        Profile passager = getProfileByMatricule(matPassager);
 
-        if (chauffeur == null || passager == null) {
-            System.out.println("Error: One or more profiles were not found.");
-            return false;
+    // =========================================================
+    // UPDATE DRIVER AND PASSENGER RATINGS
+    // =========================================================
+
+    public static void refreshMoyenne(
+            Profile driver,
+            Profile passenger,
+            int driverRating,
+            int passengerRating) {
+
+        if (driver != null) {
+
+            driver.moyChauff += driverRating;
+            driver.nbChauff++;
+
+            driver.setReputation(
+                    driver.calculMoyenne()
+            );
         }
 
-        // Mise à jour pour le chauffeur
-        chauffeur.moyChauff += noteChauffeur;
-        chauffeur.nbChauff++;
-        chauffeur.setReputation(chauffeur.calculMoyenne());
+        if (passenger != null) {
 
-        // Mise à jour pour le passager
-        passager.moyPass += notePassager;
-        passager.nbPass++;
-        passager.setReputation(passager.calculMoyenne());
+            passenger.moyPass += passengerRating;
+            passenger.nbPass++;
 
-        // Sauvegarder les modifications
+            passenger.setReputation(
+                    passenger.calculMoyenne()
+            );
+        }
+
         try {
-            chauffeur.mettreAJourProfil();
-            passager.mettreAJourProfil();
-            return true;
+
+            if (driver != null) {
+                driver.mettreAJourProfil();
+            }
+
+            if (passenger != null) {
+                passenger.mettreAJourProfil();
+            }
+
         } catch (IOException e) {
-            System.out.println("Error updating profiles: " + e.getMessage());
-            return false;
+
+            System.out.println(
+                    "Error updating ratings: "
+                            + e.getMessage()
+            );
         }
     }
 
-    public Profile(String nom, String prenom, double matricule, float rep, status status, List<String> itineraire, List<String> preferences, Horaire horaire, Type type) throws IOException {
-        super(nom, prenom, matricule, rep);
-        this.role = checkTypeUser();  // Input from user
-        this.status = status;
+
+    // =========================================================
+    // UPDATE RATINGS USING USER IDS
+    // =========================================================
+
+    public static boolean refreshMoyenne(
+            double driverId,
+            double passengerId,
+            float driverRating,
+            float passengerRating) {
+
+        Profile driver =
+                getProfileByMatricule(driverId);
+
+        Profile passenger =
+                getProfileByMatricule(passengerId);
+
+        if (driver == null || passenger == null) {
+
+            System.out.println(
+                    "Error: Driver or passenger profile was not found."
+            );
+
+            return false;
+        }
+
+        refreshMoyenne(
+                driver,
+                passenger,
+                Math.round(driverRating),
+                Math.round(passengerRating)
+        );
+
+        return true;
+    }
+
+
+    // =========================================================
+    // CONSTRUCTOR
+    // =========================================================
+
+    public Profile(
+            String nom,
+            String prenom,
+            double matricule,
+            float rep,
+            status status,
+            List<String> itineraire,
+            List<String> preferences,
+            Horaire horaire,
+            Type type) throws IOException {
+
+        super(
+                nom,
+                prenom,
+                matricule,
+                rep
+        );
+
+        this.role = checkTypeUser();
+
+        Profile.status = status;
+
         this.itineraire = itineraire;
         this.preferences = preferences;
         this.horaire = horaire;
         this.type = type;
 
-        profilesMap.put(matricule, this);
-        sauvegarderProfil(); // save into users.txt
+        profilesMap.put(
+                matricule,
+                this
+        );
+
+        sauvegarderProfil();
     }
 
-    /**
-     * Sauvegarde le profil dans le fichier des profils
-     */
-    private void sauvegarderProfil() throws IOException {
-        String profileData = getNom() + "," +
-                getPrenom() + "," +
-                getMatricule() + "," +
-                getReputation() + "," +
-                status + "," +
-                String.join("|", itineraire) + "," +
-                String.join("|", preferences) + "," +
-                horaire + "," +
-                type + "," +
-                moyPass + "," +
-                moyChauff + "," +
-                nbPass + "," +
-                nbChauff + "\n";
 
-        Files.write(Paths.get(FICHIER_PROFILES),
-                profileData.getBytes(StandardCharsets.UTF_8),
-                StandardOpenOption.CREATE,
-                StandardOpenOption.APPEND);
-    }
+    // =========================================================
+    // SAVE PROFILE
+    // =========================================================
 
-    /**
-     * Met à jour le profil dans le fichier des profils
-     */
-    public void mettreAJourProfil() throws IOException {
-        if (!Files.exists(Paths.get(FICHIER_PROFILES))) {
-            sauvegarderProfil();
-            return;
-        }
+    private void sauvegarderProfil()
+            throws IOException {
 
-        List<String> lines = Files.readAllLines(Paths.get(FICHIER_PROFILES));
-        boolean found = false;
-
-        for (int i = 0; i < lines.size(); i++) {
-            String[] parts = lines.get(i).split(",");
-            if (parts.length >= 3 && Double.parseDouble(parts[2]) == getMatricule()) {
-                String updatedLine = getNom() + "," +
+        String profileData =
+                getNom() + "," +
                         getPrenom() + "," +
                         getMatricule() + "," +
                         getReputation() + "," +
-                        status + "," +
-                        String.join("|", itineraire) + "," +
-                        String.join("|", preferences) + "," +
+                        Profile.status + "," +
+                        String.join(
+                                "|",
+                                itineraire
+                        ) + "," +
+                        String.join(
+                                "|",
+                                preferences
+                        ) + "," +
                         horaire + "," +
                         type + "," +
                         moyPass + "," +
                         moyChauff + "," +
                         nbPass + "," +
-                        nbChauff;
+                        nbChauff +
+                        "\n";
 
-                lines.set(i, updatedLine);
-                found = true;
-                break;
+        Files.write(
+                Paths.get(FICHIER_PROFILES),
+                profileData.getBytes(
+                        StandardCharsets.UTF_8
+                ),
+                StandardOpenOption.CREATE,
+                StandardOpenOption.APPEND
+        );
+    }
+
+
+    // =========================================================
+    // UPDATE PROFILE
+    // =========================================================
+
+    public void mettreAJourProfil()
+            throws IOException {
+
+        if (!Files.exists(
+                Paths.get(FICHIER_PROFILES)
+        )) {
+
+            sauvegarderProfil();
+            return;
+        }
+
+        List<String> lines =
+                Files.readAllLines(
+                        Paths.get(FICHIER_PROFILES)
+                );
+
+        boolean found = false;
+
+        for (int i = 0; i < lines.size(); i++) {
+
+            String[] parts =
+                    lines.get(i).split(",");
+
+            if (parts.length >= 3) {
+
+                try {
+
+                    double id =
+                            Double.parseDouble(
+                                    parts[2]
+                            );
+
+                    if (id == getMatricule()) {
+
+                        String updatedLine =
+                                getNom() + "," +
+                                        getPrenom() + "," +
+                                        getMatricule() + "," +
+                                        getReputation() + "," +
+                                        Profile.status + "," +
+                                        String.join(
+                                                "|",
+                                                itineraire
+                                        ) + "," +
+                                        String.join(
+                                                "|",
+                                                preferences
+                                        ) + "," +
+                                        horaire + "," +
+                                        type + "," +
+                                        moyPass + "," +
+                                        moyChauff + "," +
+                                        nbPass + "," +
+                                        nbChauff;
+
+                        lines.set(
+                                i,
+                                updatedLine
+                        );
+
+                        found = true;
+                        break;
+                    }
+
+                } catch (NumberFormatException e) {
+
+                    // Ignore invalid records
+                }
             }
         }
 
         if (!found) {
+
             sauvegarderProfil();
+
         } else {
-            Files.write(Paths.get(FICHIER_PROFILES), lines);
+
+            Files.write(
+                    Paths.get(FICHIER_PROFILES),
+                    lines
+            );
         }
     }
 
-    /**
-     * Récupère un profil par son matricule
-     * @param matricule Le matricule du profil à récupérer
-     * @return Le profil correspondant ou null si non trouvé
-     */
-    public static Profile getProfileByMatricule(double matricule) {
-        // Si le profil est déjà en mémoire, le retourner
+
+    // =========================================================
+    // FIND PROFILE BY MATRICULE
+    // =========================================================
+
+    public static Profile getProfileByMatricule(
+            double matricule) {
+
+        // Check memory first
         if (profilesMap.containsKey(matricule)) {
+
             return profilesMap.get(matricule);
         }
 
-        // Sinon, essayer de le charger depuis le fichier
         try {
-            if (!Files.exists(Paths.get(FICHIER_PROFILES))) {
+
+            if (!Files.exists(
+                    Paths.get(FICHIER_PROFILES)
+            )) {
+
                 return null;
             }
 
-            List<String> lines = Files.readAllLines(Paths.get(FICHIER_PROFILES));
+            List<String> lines =
+                    Files.readAllLines(
+                            Paths.get(FICHIER_PROFILES)
+                    );
 
             for (String line : lines) {
-                String[] parts = line.split(",");
-                if (parts.length >= 13 && Double.parseDouble(parts[2]) == matricule) {
-                    // Reconstruire le profil
-                    String nom = parts[0];
-                    String prenom = parts[1];
-                    float reputation = Float.parseFloat(parts[3]);
-                    status stat = status.valueOf(parts[4]);
 
-                    List<String> itineraire = Arrays.asList(parts[5].split("\\|"));
-                    List<String> preferences = Arrays.asList(parts[6].split("\\|"));
+                String[] parts =
+                        line.split(",");
 
-                    Horaire hor = Horaire.valueOf(parts[7]);
-                    Type typ = Type.valueOf(parts[8]);
+                if (parts.length >= 13) {
 
-                    // Créer le profil sans le sauvegarder à nouveau
-                    Profile profile = new Profile(nom, prenom, matricule, reputation, stat, itineraire, preferences, hor, typ);
+                    double id;
 
-                    // Mettre à jour les moyennes et compteurs
-                    profile.moyPass = Float.parseFloat(parts[9]);
-                    profile.moyChauff = Float.parseFloat(parts[10]);
-                    profile.nbPass = Integer.parseInt(parts[11]);
-                    profile.nbChauff = Integer.parseInt(parts[12]);
+                    try {
 
-                    // Ajouter à la map et retourner
-                    profilesMap.put(matricule, profile);
-                    return profile;
+                        id = Double.parseDouble(
+                                parts[2]
+                        );
+
+                    } catch (NumberFormatException e) {
+
+                        continue;
+                    }
+
+                    if (id == matricule) {
+
+                        String nom =
+                                parts[0];
+
+                        String prenom =
+                                parts[1];
+
+                        float reputation =
+                                Float.parseFloat(
+                                        parts[3]
+                                );
+
+                        status userStatus =
+                                status.valueOf(
+                                        parts[4]
+                                );
+
+                        List<String> route =
+                                parts[5].isEmpty()
+                                        ? new ArrayList<>()
+                                        : Arrays.asList(
+                                        parts[5]
+                                                .split("\\|")
+                                );
+
+                        List<String> userPreferences =
+                                parts[6].isEmpty()
+                                        ? new ArrayList<>()
+                                        : Arrays.asList(
+                                        parts[6]
+                                                .split("\\|")
+                                );
+
+                        Horaire userHoraire =
+                                Horaire.valueOf(
+                                        parts[7]
+                                );
+
+                        Type userType =
+                                Type.valueOf(
+                                        parts[8]
+                                );
+
+                        /*
+                         * Create the profile.
+                         */
+                        Profile profile =
+                                new Profile(
+                                        nom,
+                                        prenom,
+                                        matricule,
+                                        reputation,
+                                        userStatus,
+                                        route,
+                                        userPreferences,
+                                        userHoraire,
+                                        userType
+                                );
+
+                        profile.moyPass =
+                                Float.parseFloat(
+                                        parts[9]
+                                );
+
+                        profile.moyChauff =
+                                Float.parseFloat(
+                                        parts[10]
+                                );
+
+                        profile.nbPass =
+                                Integer.parseInt(
+                                        parts[11]
+                                );
+
+                        profile.nbChauff =
+                                Integer.parseInt(
+                                        parts[12]
+                                );
+
+                        profilesMap.put(
+                                matricule,
+                                profile
+                        );
+
+                        return profile;
+                    }
                 }
             }
-        } catch (IOException | NumberFormatException e) {
-            System.out.println("Error retrieving profile: " + e.getMessage());
+
+        } catch (
+                IOException |
+                IllegalArgumentException e) {
+
+            /*
+             * NumberFormatException is already a subclass
+             * of IllegalArgumentException, so it must NOT
+             * be placed separately in this multi-catch.
+             */
+            System.out.println(
+                    "Error retrieving profile: "
+                            + e.getMessage()
+            );
         }
 
         return null;
     }
 
-    /**
-     * Charge tous les profils depuis le fichier
-     */
-    public static List<Profile> chargerTousProfils() {
-        List<Profile> profiles = new ArrayList<>();
+
+    // =========================================================
+    // LOAD ALL PROFILES
+    // =========================================================
+
+    public static List<Profile>
+    chargerTousProfils() {
+
+        List<Profile> profiles =
+                new ArrayList<>();
 
         try {
-            if (!Files.exists(Paths.get(FICHIER_PROFILES))) {
+
+            if (!Files.exists(
+                    Paths.get(FICHIER_PROFILES)
+            )) {
+
                 return profiles;
             }
 
-            List<String> lines = Files.readAllLines(Paths.get(FICHIER_PROFILES));
+            List<String> lines =
+                    Files.readAllLines(
+                            Paths.get(FICHIER_PROFILES)
+                    );
 
             for (String line : lines) {
-                String[] parts = line.split(",");
+
+                String[] parts =
+                        line.split(",");
+
                 if (parts.length >= 13) {
-                    double matricule = Double.parseDouble(parts[2]);
 
-                    // Si le profil n'est pas déjà chargé, le charger
-                    if (!profilesMap.containsKey(matricule)) {
-                        getProfileByMatricule(matricule);
+                    try {
+
+                        double matricule =
+                                Double.parseDouble(
+                                        parts[2]
+                                );
+
+                        Profile profile =
+                                getProfileByMatricule(
+                                        matricule
+                                );
+
+                        if (profile != null &&
+                                !profiles.contains(
+                                        profile
+                                )) {
+
+                            profiles.add(profile);
+                        }
+
+                    } catch (
+                            NumberFormatException e) {
+
+                        // Ignore invalid records
                     }
-
-                    profiles.add(profilesMap.get(matricule));
                 }
             }
-        } catch (IOException | NumberFormatException e) {
-            System.out.println("Error loading profiles: " + e.getMessage());
+
+        } catch (IOException e) {
+
+            System.out.println(
+                    "Error loading profiles: "
+                            + e.getMessage()
+            );
         }
 
         return profiles;
     }
 
-    public void ajouterDemande() throws IOException {
-        Scanner sc = new Scanner(System.in);
 
-        System.out.println("\n=== New Ride Request ===");
-        System.out.print("Starting point: ");
-        String depart = sc.nextLine();
-        System.out.print("Destination: ");
-        String arrivee = sc.nextLine();
-        System.out.print("Departure time (HH:MM): ");
-        String heure = sc.nextLine();
+    // =========================================================
+    // ADD RIDE REQUEST
+    // =========================================================
 
-        String demande = "Request from: " + getNom() + " " + getPrenom() +
-                " (Mat: " + getMatricule() + ")\n" +
-                "Status: " + status.toString() + "\n" +
-                "Route: " + depart + " -> " + arrivee + "\n" +
-                "Preferences: " + String.join(", ", preferences) + "\n" +
-                "Availability: " + horaire.toString() + "\n" +
-                "Type: " + type.toString() + "\n" +
-                "Requested time: " + heure + "\n" +
-                "Reputation: " + String.format("%.1f", getReputation()) + "\n" +
-                "----------------------------\n";
+    public void ajouterDemande()
+            throws IOException {
 
-        Files.write(Paths.get(FICHIER_DEMANDES),
-                demande.getBytes(StandardCharsets.UTF_8),
+        Scanner scanner =
+                new Scanner(System.in);
+
+        System.out.println(
+                "\n=== New Ride Request ==="
+        );
+
+        System.out.print(
+                "Starting point: "
+        );
+
+        String departure =
+                scanner.nextLine();
+
+        System.out.print(
+                "Destination: "
+        );
+
+        String destination =
+                scanner.nextLine();
+
+        System.out.print(
+                "Departure time (HH:MM): "
+        );
+
+        String time =
+                scanner.nextLine();
+
+        String request =
+                "Request from: " +
+                        getNom() + " " +
+                        getPrenom() +
+                        " (ID: " +
+                        getMatricule() +
+                        ")\n" +
+
+                        "Status: " +
+                        Profile.status +
+                        "\n" +
+
+                        "Route: " +
+                        departure +
+                        " -> " +
+                        destination +
+                        "\n" +
+
+                        "Preferences: " +
+                        String.join(
+                                ", ",
+                                preferences
+                        ) +
+                        "\n" +
+
+                        "Availability: " +
+                        horaire +
+                        "\n" +
+
+                        "Trip type: " +
+                        type +
+                        "\n" +
+
+                        "Requested time: " +
+                        time +
+                        "\n" +
+
+                        "Reputation: " +
+                        String.format(
+                                "%.1f",
+                                getReputation()
+                        ) +
+                        "\n" +
+
+                        "----------------------------\n";
+
+        Files.write(
+                Paths.get(FICHIER_DEMANDES),
+                request.getBytes(
+                        StandardCharsets.UTF_8
+                ),
                 StandardOpenOption.CREATE,
-                StandardOpenOption.APPEND);
+                StandardOpenOption.APPEND
+        );
 
-        System.out.println("\nRequest saved successfully!");
+        System.out.println(
+                "\nRequest saved successfully!"
+        );
     }
 
-    public static void afficherDemandes() {
-        try {
-            System.out.println("\n=== Request List ===");
 
-            if (!Files.exists(Paths.get(FICHIER_DEMANDES))) {
-                System.out.println("No requests at the moment.");
+    // =========================================================
+    // DISPLAY REQUESTS
+    // =========================================================
+
+    public static void afficherDemandes() {
+
+        try {
+
+            System.out.println(
+                    "\n=== Ride Request List ==="
+            );
+
+            if (!Files.exists(
+                    Paths.get(FICHIER_DEMANDES)
+            )) {
+
+                System.out.println(
+                        "No requests at the moment."
+                );
+
                 return;
             }
 
-            List<String> lignes = Files.readAllLines(Paths.get(FICHIER_DEMANDES));
+            List<String> lines =
+                    Files.readAllLines(
+                            Paths.get(FICHIER_DEMANDES)
+                    );
 
-            if (lignes.isEmpty()) {
-                System.out.println("No requests at the moment.");
+            if (lines.isEmpty()) {
+
+                System.out.println(
+                        "No requests at the moment."
+                );
+
             } else {
-                for (String ligne : lignes) {
-                    System.out.println(ligne);
+
+                for (String line : lines) {
+
+                    System.out.println(line);
                 }
             }
+
         } catch (IOException e) {
-            System.out.println("Read error: " + e.getMessage());
+
+            System.out.println(
+                    "Error reading requests: "
+                            + e.getMessage()
+            );
         }
     }
 
-    public static void main(String[] args) {
-        Scanner sc = new Scanner(System.in);
+
+    // =========================================================
+    // MAIN - PROFILE TEST
+    // =========================================================
+
+    public static void main(
+            String[] args) {
+
+        Scanner scanner =
+                new Scanner(System.in);
 
         try {
-            System.out.println("=== Create Your Profile ===");
-            System.out.print("Last name: ");
-            String nom = sc.nextLine();
-            System.out.print("First name: ");
-            String prenom = sc.nextLine();
-            System.out.print("ID: ");
-            double matricule = sc.nextDouble();
-            System.out.print("Initial reputation (1-5): ");
-            float reputation = sc.nextFloat();
-            sc.nextLine();
 
+            System.out.println(
+                    "=== Create Your Profile ==="
+            );
 
-            System.out.print("Status (1-Passenger, 2-Driver): ");
-            status statut = (sc.nextInt() == 1) ? status.Passager : status.Chauffeur;
-            sc.nextLine();
+            System.out.print(
+                    "Last name: "
+            );
 
-            System.out.println("Usual route (separated by commas): ");
-            List<String> itineraire = Arrays.asList(sc.nextLine().split(","));
+            String lastName =
+                    scanner.nextLine();
 
-            System.out.println("Preferences (separated by commas): ");
-            List<String> preferences = Arrays.asList(sc.nextLine().split(","));
+            System.out.print(
+                    "First name: "
+            );
 
-            System.out.print("Availability (1-Daily, 2-Weekly, 3-Every day): ");
-            Horaire horaire = Horaire.values()[sc.nextInt()-1];
+            String firstName =
+                    scanner.nextLine();
 
-            System.out.print("Trip type (1-Round trip, 2-One way, 3-Return only): ");
-            Type type = Type.values()[sc.nextInt()-1];
-            sc.nextLine();
+            System.out.print(
+                    "ID: "
+            );
 
-            Profile profil = new Profile(nom, prenom, matricule, reputation,
-                    statut, itineraire, preferences, horaire, type);
+            double matricule =
+                    scanner.nextDouble();
 
-            System.out.println("\nProfile created successfully!");
+            System.out.print(
+                    "Initial reputation (1-5): "
+            );
 
+            float reputation =
+                    scanner.nextFloat();
+
+            scanner.nextLine();
+
+            System.out.print(
+                    "Status " +
+                            "(1-Passenger, 2-Driver): "
+            );
+
+            status userStatus =
+                    (scanner.nextInt() == 1)
+                            ? status.Passager
+                            : status.Chauffeur;
+
+            scanner.nextLine();
+
+            System.out.print(
+                    "Usual route " +
+                            "(separated by commas): "
+            );
+
+            List<String> route =
+                    Arrays.asList(
+                            scanner
+                                    .nextLine()
+                                    .split(",")
+                    );
+
+            System.out.print(
+                    "Preferences " +
+                            "(separated by commas): "
+            );
+
+            List<String> preferences =
+                    Arrays.asList(
+                            scanner
+                                    .nextLine()
+                                    .split(",")
+                    );
+
+            System.out.print(
+                    "Availability " +
+                            "(1-Daily, 2-Weekly, " +
+                            "3-Every day): "
+            );
+
+            int availabilityChoice =
+                    scanner.nextInt();
+
+            Horaire userHoraire;
+
+            switch (availabilityChoice) {
+
+                case 1:
+
+                    userHoraire =
+                            Horaire.Journalier;
+
+                    break;
+
+                case 2:
+
+                    userHoraire =
+                            Horaire.Hebdomadaire;
+
+                    break;
+
+                case 3:
+
+                    userHoraire =
+                            Horaire.Quotidien;
+
+                    break;
+
+                default:
+
+                    System.out.println(
+                            "Invalid choice. " +
+                                    "Using Daily."
+                    );
+
+                    userHoraire =
+                            Horaire.Journalier;
+            }
+
+            System.out.print(
+                    "Trip type " +
+                            "(1-Round trip, " +
+                            "2-One way, " +
+                            "3-Return only): "
+            );
+
+            int typeChoice =
+                    scanner.nextInt();
+
+            Type userType;
+
+            switch (typeChoice) {
+
+                case 1:
+
+                    userType =
+                            Type.allerRetour;
+
+                    break;
+
+                case 2:
+
+                    userType =
+                            Type.aller;
+
+                    break;
+
+                case 3:
+
+                    userType =
+                            Type.retour;
+
+                    break;
+
+                default:
+
+                    System.out.println(
+                            "Invalid choice. " +
+                                    "Using One Way."
+                    );
+
+                    userType =
+                            Type.aller;
+            }
+
+            scanner.nextLine();
+
+            Profile profile =
+                    new Profile(
+                            lastName,
+                            firstName,
+                            matricule,
+                            reputation,
+                            userStatus,
+                            route,
+                            preferences,
+                            userHoraire,
+                            userType
+                    );
+
+            System.out.println(
+                    "\nProfile created successfully!"
+            );
+
+            // =================================================
+            // USER MENU
+            // =================================================
 
             while (true) {
-                System.out.println("\n=== Main Menu ===");
-                System.out.println("1. Request a ride");
-                System.out.println("2. View all requests");
-                System.out.println("3. Change my status");
-                System.out.println("4. Exit");
-                System.out.print("Choice: ");
 
-                int choix = sc.nextInt();
-                sc.nextLine();
+                System.out.println(
+                        "\n=== User Menu ==="
+                );
 
-                switch (choix) {
+                System.out.println(
+                        "Current status: " +
+                                profile.getStatus()
+                );
+
+                System.out.println(
+                        "Reputation: " +
+                                profile.getReputation()
+                );
+
+                System.out.println(
+                        "1. Request a ride"
+                );
+
+                System.out.println(
+                        "2. View all requests"
+                );
+
+                System.out.println(
+                        "3. Change my status"
+                );
+
+                System.out.println(
+                        "4. Exit"
+                );
+
+                System.out.print(
+                        "Your choice: "
+                );
+
+                int choice =
+                        scanner.nextInt();
+
+                scanner.nextLine();
+
+                switch (choice) {
+
                     case 1:
-                        if (status == status.Passager) {
-                            profil.ajouterDemande();
+
+                        if (profile.getStatus()
+                                == status.Passager) {
+
+                            profile.ajouterDemande();
+
                         } else {
-                            System.out.println("Only passengers can make requests.");
+
+                            System.out.println(
+                                    "Only passengers " +
+                                            "can make ride requests."
+                            );
                         }
+
                         break;
+
                     case 2:
+
                         afficherDemandes();
+
                         break;
+
                     case 3:
-                        profil.switchStatus();
-                        System.out.println("New status: " + status);
+
+                        profile.switchStatus();
+
+                        System.out.println(
+                                "Your new status: " +
+                                        profile.getStatus()
+                        );
+
                         break;
+
                     case 4:
-                        System.out.println("Goodbye!");
-                        System.exit(0);
+
+                        System.out.println(
+                                "Goodbye!"
+                        );
+
+                        return;
+
                     default:
-                        System.out.println("Invalid choice!");
+
+                        System.out.println(
+                                "Invalid choice. " +
+                                        "Please try again."
+                        );
                 }
             }
 
         } catch (Exception e) {
-            System.out.println("Error: " + e.getMessage());
+
+            System.out.println(
+                    "Error: " +
+                            e.getMessage()
+            );
+
             e.printStackTrace();
         }
     }

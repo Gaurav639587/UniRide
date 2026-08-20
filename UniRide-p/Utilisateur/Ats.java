@@ -3,34 +3,43 @@ package Utilisateur;
 import java.io.IOException;
 
 public class Ats extends Utilisateur {
-    private int anneeRecrutement;
-    private String service;
+
+    private int recruitmentYear;
+    private String department;
     private final String role = "ATS";
 
-    public Ats(String nom, String prenom, double matricule, float reputation, int anneeRecrutement, String service) throws IOException {
+    public Ats(
+            String nom,
+            String prenom,
+            double matricule,
+            float reputation,
+            int recruitmentYear,
+            String department
+    ) throws IOException {
+
         super(nom, prenom, matricule, reputation);
-        this.anneeRecrutement = anneeRecrutement;
-        this.service = service;
+
+        this.recruitmentYear = recruitmentYear;
+        this.department = department;
     }
 
     public String getRole() {
         return this.role;
     }
 
-    protected int getAnneeRecrutement() {
-        return this.anneeRecrutement;
+    protected int getRecruitmentYear() {
+        return this.recruitmentYear;
     }
 
-    protected void setAnneeRecrutement(int anneeRecrutement) {
-        this.anneeRecrutement = anneeRecrutement;
+    protected void setRecruitmentYear(int recruitmentYear) {
+        this.recruitmentYear = recruitmentYear;
     }
 
-    protected String getService() {
-        return this.service;
+    protected String getDepartment() {
+        return this.department;
     }
 
-    protected void setService(String service) {
-        this.service = service;
+    protected void setDepartment(String department) {
+        this.department = department;
     }
 }
-

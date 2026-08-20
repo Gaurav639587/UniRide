@@ -3,19 +3,43 @@ package Utilisateur;
 import java.io.IOException;
 
 public class Enseignant extends Utilisateur {
-    private int anneerecrutement;
-    private String faculte;
+
+    private int recruitmentYear;
+    private String faculty;
     private final String role = "ENSEIGNANT";
 
-    public Enseignant(String nom, String prenom, double matricule, float reputation, int anneerecrutement, String faculte) throws IOException {
+    public Enseignant(
+            String nom,
+            String prenom,
+            double matricule,
+            float reputation,
+            int recruitmentYear,
+            String faculty
+    ) throws IOException {
+
         super(nom, prenom, matricule, reputation);
-        this.anneerecrutement = anneerecrutement;
-        this.faculte = faculte;
+
+        this.recruitmentYear = recruitmentYear;
+        this.faculty = faculty;
     }
 
-    public String getRole() { return this.role; }
-    protected int getAnneeRecrutement() { return this.anneerecrutement; }
-    protected void setAnneeRecrutement(int anneerecrutement) { this.anneerecrutement = anneerecrutement; }
-    protected String getFaculte() { return this.faculte; }
-    protected void setFaculte(String faculte) { this.faculte = faculte; }
+    public String getRole() {
+        return this.role;
+    }
+
+    protected int getRecruitmentYear() {
+        return this.recruitmentYear;
+    }
+
+    protected void setRecruitmentYear(int recruitmentYear) {
+        this.recruitmentYear = recruitmentYear;
+    }
+
+    protected String getFaculty() {
+        return this.faculty;
+    }
+
+    protected void setFaculty(String faculty) {
+        this.faculty = faculty;
+    }
 }
