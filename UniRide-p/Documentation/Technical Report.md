@@ -1,231 +1,232 @@
-## **Fonctionnalités principales**
+## **Main Features**
 
-* **Gestion d'utilisateurs : création de compte avec différents profils (Étudiant, Enseignant, ATS)**  
-* **Système de réputation : évaluation des utilisateurs après chaque course**  
-* **Gestion des statuts : alternance entre passager et chauffeur**  
-* **Gestion des courses : création, acceptation et finalisation de courses**
+* **User Management:** Account creation with different profiles (Student, Teacher, Administrative/Technical/Service Staff)
+* **Reputation System:** User ratings after each ride
+* **Status Management:** Switching between passenger and driver
+* **Ride Management:** Creation, acceptance, and completion of rides
 
-## **Structure des classes**
+## **Class Structure**
 
-* **Main : interface utilisateur et gestion des flux**  
-* **Utilisateur (classe mère) → Etudiant, Enseignant, Ats (classes filles)**  
-* **Profile : gestion des profils utilisateurs, préférences et disponibilités**  
-* **Course : gestion du cycle de vie des courses**  
-* **Admin : fonctionnalités administratives, incluant la gestion de la liste noire**
+* **Main:** User interface and application flow management
+* **Utilisateur (Parent Class) → Etudiant, Enseignant, Ats (Child Classes)**
+* **Profile:** Management of user profiles, preferences, and availability
+* **Course:** Management of the ride lifecycle
+* **Admin:** Administrative features, including blacklist management
 
-## **Classe Utilisateur (Khateb Abdelkrim)**
+## **Utilisateur Class**
 
-**La classe implémente un système de gestion d'utilisateurs avec persistance des données dans un fichier texte.**
+**The class implements a user management system with data persistence in a text file.**
 
-**Structure de Données**
+### **Data Structure**
 
-**La classe maintient quatre attributs principaux pour chaque utilisateur:**
+**The class maintains four main attributes for each user:**
 
-* **nom et prénom: Identifiants textuels de l'utilisateur (final, immuables)**  
-* **matricule: Numéro d'identification unique (final, immuable)**  
-* **reputation: Score numérique entre 0 et 5**  
-* **typeUser: Type d'utilisateur choisi lors de la création**
+* **Last name and first name:** Textual identifiers of the user (final, immutable)
+* **Matricule:** Unique identification number (final, immutable)
+* **Reputation:** Numerical score between 0 and 5
+* **User type:** Type of user selected during account creation
 
-### **Validation des Données**
+### **Data Validation**
 
-1. **checkNP(): Assure que les noms et prénoms contiennent uniquement des lettres, supportant les caractères internationaux en utilisant les expressions régulières (regex).**  
-2. **checkDate(): Valide le format du matricule**  
-3. **checkRep(): Vérifie que la réputation est entre 0-5**
+1. **checkNP():** Ensures that first and last names contain only letters, supporting international characters using regular expressions (regex).
+2. **checkDate():** Validates the matricule format
+3. **checkRep():** Verifies that the reputation is between 0 and 5
 
-### **Persistance des Utilisateurs**
+### **User Data Persistence**
 
-**Les données utilisateur sont stockées dans un fichier texte "users.txt" avec le format suivant:matricule,nom,prenom,réputation.**
+**User data is stored in a text file named `users.txt` using the following format:**
 
-### **Fonctionnalités de Recherche**
+`matricule,lastName,firstName,reputation`
 
-* **Afficher tous les utilisateurs (printUsers())**  
-* **Une *surchargé* de la methode precedente qui permette à afficher un nombre limité d'utilisateurs (printUsers(int i))**  
-* **Trouver un utilisateur par matricule (findUser(double mat))**
+### **Search Features**
 
-### **Sécurité et Encapsulation**
+* **Display all users (`printUsers()`)**
+* **Overloaded version of the previous method to display a limited number of users (`printUsers(int i)`)**
+* **Find a user by matricule (`findUser(double mat)`)**
 
-* **Les attributs d'identité sont déclarés final pour prévenir les modifications**  
-* **L'accès aux données est protégé par des accesseurs**  
-* **La validation stricte lors de la création empêche les données incorrectes**
+### **Security and Encapsulation**
 
-## **Classe Profile (Nait Mihoub Imad)**
+* **Identity attributes are declared final to prevent modifications**
+* **Data access is protected through accessor methods**
+* **Strict validation during account creation prevents invalid data**
 
-**La classe Profile implémente des fonctionnalités spécifiques à une application de covoiturage. Elle gère deux rôles distincts (passager/chauffeur), des préférences utilisateur, et un système d'évaluation.**
+## **Profile Class**
 
-### **Structure de Données**
+**The Profile class implements features specific to a carpooling application. It manages two distinct roles (passenger/driver), user preferences, and a rating system.**
 
-* **Attributs de base: Hérités de la classe Utilisateur (nom, prénom, matricule, réputation)**  
-* **Attributs spécifiques:**  
-  * **status: Enum définissant le rôle (Passager ou Chauffeur)**  
-  * **itineraire et preferences: Listes de chaînes de caractères(pour insertion et personnalisation pour chaque utilisateur)**  
-  * **horaire: Enum pour la disponibilité (Journalier, Hebdomadaire, Quotidien)**  
-  * **type: Enum pour le type de trajet (allerRetour, aller, retour)**  
-  * **Attributs de notation: moyPass, moyChauff, nbPass, nbChauff**
+### **Data Structure**
 
-### **Système de Persistance**
+* **Basic attributes:** Inherited from the `Utilisateur` class (last name, first name, matricule, reputation)
+* **Specific attributes:**
+  * **status:** Enum defining the role (Passenger or Driver)
+  * **itineraire and preferences:** Lists of strings used for customization and personalization for each user
+  * **horaire:** Enum for availability (Daily, Weekly, Every day)
+  * **type:** Enum for trip type (Round trip, One way, Return only)
+  * **Rating attributes:** `moyPass`, `moyChauff`, `nbPass`, `nbChauff`
 
-* **profiles.txt: Stockage des profils utilisateurs avec toutes leurs informations**  
-* **demands.txt: Stockage des demandes de courses**
+### **Persistence System**
 
-### **Gestion des Profils**
+* **`profiles.txt`:** Stores user profiles with all their information
+* **`demands.txt`:** Stores ride requests
 
-* **Mise en cache: Utilisation d'une HashMap statique pour stocker les profils en mémoire**  
-* **Opérations CRUD: Méthodes pour créer, lire, mettre à jour les profils**
+### **Profile Management**
 
-### **Système d'Évaluation**
+* **Caching:** Uses a static `HashMap` to store profiles in memory
+* **CRUD Operations:** Methods for creating, reading, and updating profiles
 
-* **Calcul de moyennes différenciées selon le statut (passager/chauffeur)**  
-* **Méthodes pour mettre à jour les réputations après chaque course**
+### **Rating System**
 
-## **Classe Etudiant (Kaci Ramy)**
+* **Calculation of separate averages according to status (passenger/driver)**
+* **Methods for updating reputations after each ride**
 
-### **Description :**
+## **Etudiant Class**
 
-**La classe etudiant représente un utilisateur de type étudiant. Elle hérite des attributs communs à tous les utilisateurs (nom, prénom, matricule, réputation) depuis la classe Utilisateur.**
+### **Description**
 
-### **Attributs specifiques :**
+**The `Etudiant` class represents a student user. It inherits the attributes common to all users (last name, first name, matricule, reputation) from the `Utilisateur` class.**
 
-* **anneeAdmis : int — Année d’admission de l’étudiant.**  
-* **faculte : string — Faculté à laquelle l’étudiant est rattaché.**  
-* **specialite : string — Spécialité de l’étudiant.**
+### **Specific Attributes**
 
-### **Méthodes implémentés :**
+* **`anneeAdmis` : int** — Student admission year
+* **`faculte` : String** — Faculty to which the student belongs
+* **`specialite` : String** — Student specialization
 
-* **Constructeur super()  Appelle le constructeur de la classe parente pour initialiser les attributs hérités.**
+### **Implemented Methods**
 
-* **Méthodes d’accès get() et de modification set() pour chaque attribut spécifique.**
+* **`super()` constructor:** Calls the parent class constructor to initialize inherited attributes.
+* **Getter and setter methods:** Provide access to and modify each specific attribute.
 
-## **Classe ATS (Kaci Ramy)**
+## **ATS Class**
 
-### **Description :**
+### **Description**
 
-**La classe ats  représente le personnel administratif, technique et de service de l’université. Elle hérite des caractéristiques de base de utilisateur.**
+**The `Ats` class represents the administrative, technical, and service staff of the university. It inherits the basic characteristics of the `Utilisateur` class.**
 
-### **Attributs specifiques:**
+### **Specific Attributes**
 
-* **anneeRecrut : int — Année de recrutement dans l’établissement.**  
-* **service : string — Service administratif ou technique dans lequel travaille la personne.**
+* **`anneeRecrut` : int** — Recruitment year at the institution
+* **`service` : String** — Administrative or technical department in which the person works
 
-### **Méthodes implémentés :**
+### **Implemented Methods**
 
-* **Constructeur super() — Pour initialiser les attributs hérités.**  
-* **Accesseurs et mutateurs (set()/get()) pour ses attributs spécifiques.**
+* **`super()` constructor:** Initializes the inherited attributes.
+* **Accessors and mutators (`set()`/`get()`):** Manage the class-specific attributes.
 
-## **Classe Enseignant (Kaci Ramy)**
+## **Enseignant Class**
 
-## **Description :**
+### **Description**
 
-**La classe enseignant représente les membres dans le domaine de l’enseignement . Elle hérite également de Utilisateur.**
+**The `Enseignant` class represents members of the teaching staff. It also inherits from `Utilisateur`.**
 
-### **Attributs specifiques  :**
+### **Specific Attributes**
 
-* **anneeRecrut : int — Année de recrutement comme enseignant.**  
-* **faculte : string — Faculté d'affectation de l'enseignant.**
+* **`anneeRecrut` : int** — Recruitment year as a teacher
+* **`faculte` : String** — Faculty to which the teacher is assigned
 
-### **Méthodes implémentés :**
+### **Implemented Methods**
 
-* **Constructeur super() — Pour l’initialisation via la classe parente.**  
-* **Méthodes d'accès et de modification pour ses attributs.**
+* **`super()` constructor:** Initializes the object through the parent class.
+* **Accessor and modifier methods:** Provide access to and update the class-specific attributes.
 
-## **Classe Course (Nait Mihoub Imad)**
+## **Course Class**
 
-**La classe course  a été conçue pour modéliser une course entre deux utilisateurs : un chauffeur et un passager, identifiés par leurs numéro de matricule. Cette classe gère le cycle de  la course, l’évaluation mutuelle des utilisateurs, et les données dans un fichier texte (courses.txt).**
+**The `Course` class was designed to model a ride between two users: a driver and a passenger, identified by their matricule numbers. This class manages the ride lifecycle, mutual user ratings, and data stored in a text file (`courses.txt`).**
 
-## **Structure de la classe**
+## **Class Structure**
 
-### **Attributs principaux :**
+### **Main Attributes**
 
-* **matChauffeur *(double)* : matricule de l’utilisateur jouant le rôle de chauffeur.**  
-* **matPassager *(double)* : matricule du passager.**  
-* **noteChauffeur, notePassager *(int)* : notes sur 5 attribuées respectivement par le passager et le chauffeur.**  
-* **commentChauffeur, commentPassager *(String)* : commentaires associés aux évaluations.**  
-* **horaire *(Date)* : date et heure de la course.**  
-* **status *(enum Status)* : état de la course (PENDING, IN\_PROGRESS, COMPLETED).**  
-* **COURSES\_FILE *(String)* : chemin du fichier de stockage des courses.**
+* **`matChauffeur` *(double)*:** Matricule of the user acting as the driver
+* **`matPassager` *(double)*:** Passenger's matricule
+* **`noteChauffeur`, `notePassager` *(int)*:** Ratings out of 5 assigned respectively by the passenger and the driver
+* **`commentChauffeur`, `commentPassager` *(String)*:** Comments associated with the ratings
+* **`horaire` *(Date)*:** Date and time of the ride
+* **`status` *(enum Status)*:** Ride state (`PENDING`, `IN_PROGRESS`, `COMPLETED`)
+* **`COURSES_FILE` *(String)*:** Path to the ride storage file
 
-### **Constructeur :**
+### **Constructor**
 
-* **Initialise une nouvelle course avec les matricules fournis et un statut PENDING. L’heure actuelle est prise comme horaire initial.**
+* **Initializes a new ride with the provided matricules and a `PENDING` status. The current time is used as the initial schedule.**
 
-### **Accesseurs / Mutateurs :**
+### **Accessors / Mutators**
 
-* **Getters et Setters classiques pour tous les attributs.**  
-* **Possibilité de modifier les commentaires.**
+* **Standard getters and setters for all attributes**
+* **Ability to modify comments**
 
-### **Méthodes principales :**
+### **Main Methods**
 
-#### **addCourse() :**
+#### **`addCourse()`**
 
-**Enregistre une nouvelle course dans le fichier courses.txt.**
+**Saves a new ride to the `courses.txt` file.**
 
-**startCourse() :**
+#### **`startCourse()`**
 
-* **Change le statut de la course à IN\_PROGRESS.**  
-* **Met à jour le fichier courses.txt.**
+* **Changes the ride status to `IN_PROGRESS`.**
+* **Updates the `courses.txt` file.**
 
-#### **endCourse() :**
+#### **`endCourse()`**
 
-* **Clôture la course avec les évaluations et les commentaires.**  
-* **Met à jour le statut à COMPLETED.**  
-* **Met à jour le fichier de stockage.**
+* **Completes the ride with ratings and comments.**
+* **Updates the status to `COMPLETED`.**
+* **Updates the storage file.**
 
-#### **updateCourseFile() :**
+#### **`updateCourseFile()`**
 
-* **Méthode privée qui lit tout le fichier courses.txt, localise la ligne correspondant à la course actuelle (via les deux matricules), la modifie et réécrit le fichier.**
+* **Private method that reads the entire `courses.txt` file, locates the line corresponding to the current ride using the two matricules, modifies it, and rewrites the file.**
 
-#### **displayAllCourses()  :**
+#### **`displayAllCourses()`**
 
-* **Affiche la liste de toutes les courses enregistrées, avec chauffeur, passager, date, statut et notes.**
+* **Displays the list of all recorded rides, including driver, passenger, date, status, and ratings.**
 
-#### **findCoursesByUser(double matricule) :**
+#### **`findCoursesByUser(double matricule)`**
 
-* **Retourne une liste d’objets Course pour un utilisateur donné (qu’il soit chauffeur ou passager).**
+* **Returns a list of `Course` objects for a specific user, whether they are a driver or passenger.**
 
-## **Classe Admin (Khateb Abdelkrim \- Nait Mihoub Imad)**
+## **Admin Class**
 
-**Structure et Fonctionnalités**
+### **Structure and Features**
 
-### **Authentification et Sécurité**
+### **Authentication and Security**
 
-* **Gestion des identifiants : Un système de mot de passe statique (password) avec possibilité de modification.**  
-* **Validation de mot de passe : Algorithme vérifiant la présence d'au moins un chiffre, un symbole et une longueur minimale de 8 caractères.**
+* **Credential Management:** A static password system (`password`) with the ability to change the password.
+* **Password Validation:** An algorithm that verifies the presence of at least one digit, one symbol, and a minimum length of 8 characters.
 
-### **Gestion des Utilisateurs**
+### **User Management**
 
-* **Bannissement d'utilisateurs (banUser, unbanUser) : Système maintenant une liste noire dans un fichier externe (blacklist.txt).**  
-* **Suppression d'utilisateurs (deleteUser) : Retire définitivement un utilisateur du système avec nettoyage de son statut de bannissement si applicable.**  
-* **Visualisation des bannis (showBannedUsers) : Consultation de la liste des utilisateurs suspendus.**
+* **User Banning (`banUser`, `unbanUser`):** A system that maintains a blacklist in an external file (`blacklist.txt`).
+* **User Deletion (`deleteUser`):** Permanently removes a user from the system and cleans up their ban status if applicable.
+* **Banned User Display (`showBannedUsers`):** Allows administrators to view the list of suspended users.
 
-### **Monitoring des Courses**
+### **Ride Monitoring**
 
-* **Visualisation en temps réel (viewOngoingCourses) : Affiche toutes les courses actuellement en statut "IN\_PROGRESS".**  
-* **Historique complet (viewCourseHistory) : Consulte l'ensemble des courses terminées avec leurs évaluations.**  
-* **Filtrage par date (viewCoursesByDate) : Permet d'isoler les courses d'une journée spécifique.**
+* **Real-Time View (`viewOngoingCourses`):** Displays all rides currently having the `IN_PROGRESS` status.
+* **Complete History (`viewCourseHistory`):** Displays all completed rides with their ratings.
+* **Date Filtering (`viewCoursesByDate`):** Allows rides from a specific day to be isolated.
 
-### **Analytique et Statistiques**
+### **Analytics and Statistics**
 
-* **Génération de statistiques (generateStats) : Produit un tableau de bord complet incluant :**  
-  * **Répartition des utilisateurs par catégorie (étudiants, enseignants, ATS)**  
-  * **Nombre d'utilisateurs actifs**  
-  * **Nombre de courses par catégorie d'utilisateur**  
-  * **Top 10 des chauffeurs les mieux notés (avec minimum 3 courses)**  
-  * **Liste des utilisateurs les moins bien notés (potentiels candidats au bannissement)**
+* **Statistics Generation (`generateStats`):** Produces a complete dashboard including:
+  * **Distribution of users by category (students, teachers, ATS)**
+  * **Number of active users**
+  * **Number of rides by user category**
+  * **Top 10 highest-rated drivers (with a minimum of 3 rides)**
+  * **List of lowest-rated users (potential candidates for banning)**
 
-### **Interface Utilisateur**
+### **User Interface**
 
-* **Interface console interactive (showAdminMenu) permettant d'accéder à toutes les fonctionnalités via un menu numéroté.**
+* **Interactive console interface (`showAdminMenu`):** Provides access to all features through a numbered menu.
 
-## **Gestion des Données**
+## **Data Management**
 
-### **Structures de Fichiers**
+### **File Structures**
 
-* **blacklist.txt : Stockage des identifiants des utilisateurs bannis**  
-* **users.txt : Base de données des utilisateurs inscrits**  
-* **courses.txt : Registre des courses (en cours, complétées, programmées)**  
-* **profiles.txt : Profils détaillés des utilisateurs avec notes et statistiques**
+* **`blacklist.txt`:** Stores the IDs of banned users
+* **`users.txt`:** Database of registered users
+* **`courses.txt`:** Ride registry (ongoing, completed, scheduled)
+* **`profiles.txt`:** Detailed user profiles with ratings and statistics
 
-### **Algorithmes Notables**
+### **Notable Algorithms**
 
-* **Calcul des moyennes des chauffeurs/passagers : Agrégation des évaluations pour identifier les utilisateurs problématiques**  
-* **Filtrage intelligent : Utilisation des Stream API Java pour manipuler efficacement les collections de données**  
-* **Gestion transactionnelle des fichiers : Utilisation de fichiers temporaires pour assurer l'intégrité des données lors des suppressions.**
+* **Driver/passenger average calculation:** Aggregates ratings to identify problematic users
+* **Smart filtering:** Uses the Java Stream API to efficiently manipulate data collections
+* **Transactional file management:** Uses temporary files to maintain data integrity during deletion operations
