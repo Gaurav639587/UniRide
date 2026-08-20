@@ -1,18 +1,52 @@
-# 🚗 UniRide - Application de Covoiturage Universitaire
+# 🚗 UniRide - University Carpooling Application
 
-## À propos
-UniRide est une application Java de covoiturage conçue spécifiquement pour les communautés universitaires. Elle permet aux étudiants, enseignants et personnels administratifs de partager leurs trajets, réduisant ainsi l'empreinte carbone et favorisant les interactions au sein de la communauté universitaire.
+## About
 
-## Fonctionnalités
+UniRide is a Java-based carpooling application designed specifically for university communities. It allows students, teachers, and administrative staff to share rides, reduce transportation costs, lower their carbon footprint, and encourage interaction within the university community.
 
-### Pour les utilisateurs
-- **Création de compte** : Inscription selon le statut (Étudiant, Enseignant, ATS)
-- **Gestion de profil** : Configuration des préférences, itinéraires habituels et disponibilités
-- **Double statut** : Possibilité d'être passager ou chauffeur selon les besoins
-- **Planification de trajets** : Demande et offre de courses avec filtrage par préférences
-- **Système d'évaluation** : Notation des chauffeurs et passagers après chaque trajet
+## Features
 
-### Pour les administrateurs
-- **Gestion des utilisateurs** : Suivi des activités et des statistiques
-- **Modération** : Possibilité de bannir les utilisateurs ne respectant pas les règles
-- **Reporting** : Génération de statistiques d'utilisation
+### For Users
+
+- **Account Creation**: Register according to user status (Student, Teacher, Administrative/Technical/Service Staff)
+- **Profile Management**: Configure personal preferences, usual routes, and availability
+- **Dual Status**: Users can participate as either passengers or drivers depending on their needs
+- **Ride Planning**: Request and offer rides based on routes and user preferences
+- **Rating System**: Rate drivers and passengers after each ride
+- **Ride History**: View previous ride requests and completed rides
+
+### For Administrators
+
+- **User Management**: Monitor users, activities, and statistics
+- **Moderation**: Ban users who do not follow the platform rules
+- **Reporting**: Generate application usage statistics
+- **Administrative Access**: Manage the application and user activities
+
+## Technologies Used
+
+- Java
+- Object-Oriented Programming (OOP)
+- Java Collections
+- File I/O
+- Exception Handling
+- IntelliJ IDEA
+- Git & GitHub
+
+## Project Structure
+
+```text
+UniRide-p/
+├── Utilisateur/
+│   ├── Admin.java
+│   ├── Ats.java
+│   ├── Course.java
+│   ├── Enseignant.java
+│   ├── Etudiant.java
+│   ├── Main.java
+│   ├── Profile.java
+│   └── Utilisateur.java
+│
+├── Rapport/
+│   └── Rapport Technique.md
+│
+└── README.md
