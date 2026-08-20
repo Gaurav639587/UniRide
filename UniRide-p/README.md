@@ -46,7 +46,7 @@ UniRide-p/
 │   ├── Profile.java
 │   └── Utilisateur.java
 │
-├── Rapport/
-│   └── Rapport Technique.md
+├── Documentation/
+│   └── Technical Report.md
 │
 └── README.md
